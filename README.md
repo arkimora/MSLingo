@@ -1,10 +1,12 @@
 # MSLingo
 
+> 🌐 **[Монгол хэл дээр унших](README.mn.md)**
+
 **Offline Mongolian Sign Language (MSL) learning app** — built around the linguistic content of https://mnsl.mn.
 
 ## What it is
 
-A polished, Duolingo-inspired learning app for Монгол дохионы хэл. **No accounts. No cloud. No invented content.** Every sign, meaning, example, and grammar point comes from mnsl.mn.
+A Duolingo-inspired learning app for Монгол дохионы хэл. **No accounts. No cloud. No invented content.** Every sign, meaning, example, and grammar point comes from mnsl.mn.
 
 ## Quick start
 
@@ -46,9 +48,9 @@ src/
                    Fingerspelling, Numbers, Grammar, Info, Profile, Settings
 
 content/msl/       Versioned, read-only content package
-  signs.json       ~1,400 signs (mnsl.mn WP post IDs)
-  topics.json      Topic taxonomy
-  grammar.json     Grammar / info pages
+  signs.json       1,398 signs (mnsl.mn)
+  topics.json      85 topics
+  grammar.json     8 grammar / info pages
   fingerspelling.json  Mongolian Cyrillic alphabet fingerspelling
   numbers.json     Cardinal/ordinal numbers
   meta.json        Import date, source version, statistics
@@ -102,17 +104,15 @@ CI runs all three on every push — see `.github/workflows/ci.yml`.
 
 ## Android APK (TWA)
 
-The PWA is published as an Android app via Trusted Web Activity:
+The PWA is published as an Android app via Trusted Web Activity. See `twa/SIGNING.md` for full instructions (keystore generation, local signing, CI signing, Play Store).
 
 ```bash
-# Local build (requires JDK 17 + Android SDK)
+# Local debug build (requires JDK 17 + Android SDK)
 cd twa && ./gradlew assembleDebug
 
 # Or push to main and download from GitHub Actions:
-# .github/workflows/apk.yml uploads mslingo-debug.apk as an artifact
+# .github/workflows/apk.yml uploads app-debug.apk as an artifact (14-day retention)
 ```
-
-For Play Store distribution, see `plan/APK_BUILD_PLAN.md`.
 
 ## Why no accounts / cloud
 
