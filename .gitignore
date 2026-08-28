@@ -27,9 +27,7 @@ twa/local.properties
 keystore.properties
 twa/app/keystore/
 # Local-only helper scripts (downloaded tools, release publisher)
+*.bat
 gh.exe
 gh.zip
-publish-release.bat
-build-apk.bat
 build-apk.sh
-RELEASE_README.txt
