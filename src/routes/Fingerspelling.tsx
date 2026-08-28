@@ -1,16 +1,32 @@
 import { useEffect, useState } from 'react';
-import { loadContent, type ContentBundle } from '../content/loader';
+import { loadFingerspelling } from '../content/loader';
 import { Hand } from 'lucide-react';
 import { GridSkeleton } from '../components/Skeleton';
+import type { FingerspellingEntry } from '../content/schema';
 
 export default function Fingerspelling() {
-  const [content, setContent] = useState<ContentBundle | null>(null);
+  const [entries, setEntries] = useState<FingerspellingEntry[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void loadContent().then(setContent);
+    loadFingerspelling()
+      .then(setEntries)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Ачааллаж чадсангүй'));
   }, []);
 
-  if (!content) {
+  if (error) {
+    return (
+      <div className="text-center py-20 space-y-3">
+        <p className="text-ink-500 dark:text-ink-200">Ачааллаж чадсангүй</p>
+        <p className="text-xs font-mono text-ink-300">{error}</p>
+        <button onClick={() => window.location.reload()} className="text-brass-700 dark:text-brass-400 hover:underline">
+          Дахин оролдох
+        </button>
+      </div>
+    );
+  }
+
+  if (!entries) {
     return (
       <div className="space-y-6 max-w-4xl mx-auto">
         <header className="border-b rule pb-6">
@@ -38,37 +54,43 @@ export default function Fingerspelling() {
         </p>
       </header>
 
-      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-px bg-ink-100 dark:bg-ink-700 border rule rounded-md overflow-hidden">
-        {content.fingerspelling.map((entry) => (
-          <div
-            key={entry.letter}
-            className="bg-parchment-50 dark:bg-ink-800 text-center"
-          >
-            {entry.media.posterUrl && (
-              <img
-                src={entry.media.posterUrl}
-                alt={`Хурууны ${entry.letter}`}
-                className="w-full aspect-square object-contain bg-parchment-100 dark:bg-ink-900"
-                loading="lazy"
-              />
-            )}
-            {entry.media.url && (
-              <video
-                src={entry.media.url}
-                poster={entry.media.posterUrl}
-                autoPlay
-                muted
-                loop
-                playsInline
-                controls
-                className="w-full aspect-square"
-                aria-label={`Хурууны ${entry.letter}`}
-              />
-            )}
-            <p className="py-2 font-serif text-lg font-semibold text-ink-800 dark:text-parchment-50">{entry.letter}</p>
-          </div>
-        ))}
-      </div>
+      {entries.length === 0 ? (
+        <p className="text-center text-ink-400 dark:text-ink-300 py-16">
+          Хурууны үсгийн мэдээлэл хараахан бэлэн болоогүй байна.
+        </p>
+      ) : (
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-px bg-ink-100 dark:bg-ink-700 border rule rounded-md overflow-hidden">
+          {entries.map((entry) => (
+            <div
+              key={entry.letter}
+              className="bg-parchment-50 dark:bg-ink-800 text-center"
+            >
+              {entry.media.posterUrl && (
+                <img
+                  src={entry.media.posterUrl}
+                  alt={`Хурууны ${entry.letter}`}
+                  className="w-full aspect-square object-contain bg-parchment-100 dark:bg-ink-900"
+                  loading="lazy"
+                />
+              )}
+              {entry.media.url && (
+                <video
+                  src={entry.media.url}
+                  poster={entry.media.posterUrl}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  controls
+                  className="w-full aspect-square"
+                  aria-label={`Хурууны ${entry.letter}`}
+                />
+              )}
+              <p className="py-2 font-serif text-lg font-semibold text-ink-800 dark:text-parchment-50">{entry.letter}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

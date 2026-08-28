@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Heart, ExternalLink } from 'lucide-react';
-import { loadContent, findSign, findTopic, signNeighbors } from '../content/loader';
+import { findSign, signNeighbors } from '../content/loader';
 import { progress } from '../lib/progress/store';
 import type { Sign } from '../content/schema';
 import { SignDetailSkeleton } from '../components/Skeleton';
@@ -50,10 +50,10 @@ export default function SignDetail() {
     );
   }
 
-  const topicLinks = sign.topics.map(async (t) => {
-    const topic = await findTopic(t);
-    return { slug: t, name: topic?.name ?? t };
-  });
+  const topicLinks = sign.topics.map((t) => ({
+    slug: t,
+    name: t,
+  }));
 
   return (
     <article className="space-y-8 max-w-3xl mx-auto">

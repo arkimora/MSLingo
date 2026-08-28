@@ -1,16 +1,32 @@
 import { useEffect, useState } from 'react';
-import { loadContent, type ContentBundle } from '../content/loader';
+import { loadGrammar } from '../content/loader';
 import { Library } from 'lucide-react';
 import { Skeleton, SkeletonLine } from '../components/Skeleton';
+import type { GrammarTopic } from '../content/schema';
 
 export default function Grammar() {
-  const [content, setContent] = useState<ContentBundle | null>(null);
+  const [topics, setTopics] = useState<GrammarTopic[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void loadContent().then(setContent);
+    loadGrammar()
+      .then(setTopics)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Ачааллаж чадсангүй'));
   }, []);
 
-  if (!content) {
+  if (error) {
+    return (
+      <div className="text-center py-20 space-y-3">
+        <p className="text-ink-500 dark:text-ink-200">Ачааллаж чадсангүй</p>
+        <p className="text-xs font-mono text-ink-300">{error}</p>
+        <button onClick={() => window.location.reload()} className="text-brass-700 dark:text-brass-400 hover:underline">
+          Дахин оролдох
+        </button>
+      </div>
+    );
+  }
+
+  if (!topics) {
     return (
       <div className="space-y-6 max-w-3xl mx-auto">
         <header className="border-b rule pb-6 space-y-3">
@@ -44,22 +60,28 @@ export default function Grammar() {
         </p>
       </header>
 
-      <div className="divide-y rule border rule rounded-md overflow-hidden">
-        {content.grammar.map((topic) => (
-          <a
-            key={topic.id}
-            href={topic.sourceUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="block px-5 py-4 hover:bg-ink-50 dark:hover:bg-ink-800 transition"
-          >
-            <h2 className="font-semibold text-ink-800 dark:text-parchment-50">{topic.title}</h2>
-            <p className="text-sm text-ink-500 dark:text-ink-200 mt-1 line-clamp-2">
-              {topic.body.replace(/<[^>]+>/g, '').slice(0, 200)}…
-            </p>
-          </a>
-        ))}
-      </div>
+      {topics.length === 0 ? (
+        <p className="text-center text-ink-400 dark:text-ink-300 py-16">
+          Дүрмийн мэдээлэл хараахан бэлэн болоогүй байна.
+        </p>
+      ) : (
+        <div className="divide-y rule border rule rounded-md overflow-hidden">
+          {topics.map((topic) => (
+            <a
+              key={topic.id}
+              href={topic.sourceUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="block px-5 py-4 hover:bg-ink-50 dark:hover:bg-ink-800 transition"
+            >
+              <h2 className="font-semibold text-ink-800 dark:text-parchment-50">{topic.title}</h2>
+              <p className="text-sm text-ink-500 dark:text-ink-200 mt-1 line-clamp-2">
+                {topic.body.replace(/<[^>]+>/g, '').slice(0, 200)}…
+              </p>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import FlexSearch from 'flexsearch';
 import type {
   EnrichedDocumentSearchResultSetUnit,
 } from 'flexsearch';
-import { loadContent } from '../../content/loader';
+import { loadSigns } from '../../content/loader';
 
 interface IndexedSign {
   id: number;
@@ -29,7 +29,7 @@ let built = false;
 
 export async function buildSearchIndex() {
   if (built) return;
-  const { signs } = await loadContent();
+  const signs = await loadSigns();
   for (const s of signs) {
     index.add({
       id: s.id,

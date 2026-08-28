@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, BookOpen } from 'lucide-react';
-import { loadContent, type ContentBundle } from '../content/loader';
+import { loadSigns, loadTopics, loadMeta } from '../content/loader';
 import { search, buildSearchIndex } from '../lib/search';
-import type { Sign } from '../content/schema';
+import type { Sign, Topic } from '../content/schema';
 import { DictionarySkeleton } from '../components/Skeleton';
 
 const MONGOLIAN_ALPHABET = [
@@ -13,38 +13,52 @@ const MONGOLIAN_ALPHABET = [
 ];
 
 export default function Dictionary() {
-  const [content, setContent] = useState<ContentBundle | null>(null);
+  const [signs, setSigns] = useState<Sign[] | null>(null);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'topic'>('all');
   const [selectedTopic, setSelectedTopic] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
     (async () => {
-      const c = await loadContent();
-      buildSearchIndex();
-      setContent(c);
-      const t = searchParams.get('topic');
-      if (t) {
-        setActiveTab('topic');
-        setSelectedTopic(t);
+      try {
+        const t = searchParams.get('topic');
+        if (t) {
+          setActiveTab('topic');
+          setSelectedTopic(t);
+        }
+        // Topics first — small, fast, used by the topic tab and quick filter chips
+        loadTopics().then(setTopics).catch((e) => console.error('topics', e));
+        // Meta for the count in the header
+        loadMeta()
+          .then((m) => setTotalCount(m.statistics.signs))
+          .catch(() => {});
+        // Signs — large, but it streams
+        const s = await loadSigns();
+        await buildSearchIndex();
+        setSigns(s);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Ачааллаж чадсангүй');
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const filtered = useMemo<Sign[]>(() => {
-    if (!content) return [];
+    if (!signs) return [];
     if (activeTab === 'topic' && selectedTopic) {
-      return content.signs.filter((s) => s.topics.includes(selectedTopic));
+      return signs.filter((s) => s.topics.includes(selectedTopic));
     }
     if (query.trim()) {
       const hits = search(query);
       const ids = new Set(hits.map((h) => h.id));
-      return content.signs.filter((s) => ids.has(s.id));
+      return signs.filter((s) => ids.has(s.id));
     }
-    return content.signs;
-  }, [activeTab, selectedTopic, query, content]);
+    return signs;
+  }, [activeTab, selectedTopic, query, signs]);
 
   const grouped = useMemo(() => {
     const g: Record<string, Sign[]> = {};
@@ -65,7 +79,22 @@ export default function Dictionary() {
     return ai - bi;
   });
 
-  if (!content) return <DictionarySkeleton />;
+  if (error) {
+    return (
+      <div className="text-center py-20 space-y-3">
+        <p className="text-ink-500 dark:text-ink-200">Ачааллаж чадсангүй</p>
+        <p className="text-xs font-mono text-ink-300">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-brass-700 dark:text-brass-400 hover:underline"
+        >
+          Дахин оролдох
+        </button>
+      </div>
+    );
+  }
+
+  if (!signs) return <DictionarySkeleton />;
 
   return (
     <div className="space-y-6">
@@ -76,7 +105,7 @@ export default function Dictionary() {
           Толь бичиг
         </h1>
         <p className="text-sm text-ink-500 dark:text-ink-200 mt-2">
-          {content.signs.length.toLocaleString()} дохио. Эх сурвалж: mnsl.mn.
+          {totalCount.toLocaleString()} дохио. Эх сурвалж: mnsl.mn.
         </p>
       </header>
 
@@ -112,7 +141,7 @@ export default function Dictionary() {
 
       {activeTab === 'topic' && (
         <div className="flex flex-wrap gap-1.5">
-          {content.topics.map((t) => (
+          {topics.map((t) => (
             <button
               key={t.id}
               onClick={() => setSelectedTopic(t.id === selectedTopic ? '' : t.id)}

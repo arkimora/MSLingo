@@ -1,12 +1,16 @@
 {
+  "headers": [
+    {
+      "source": "/content/msl/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/.well-known/assetlinks.json",
       "destination": "/well-known/assetlinks.json"
-    },
-    {
-      "source": "/content/msl/(.*)",
-      "destination": "/content/msl/$1"
     },
     {
       "source": "/(.*)",

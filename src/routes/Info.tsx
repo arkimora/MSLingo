@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { loadContent, type ContentBundle } from '../content/loader';
+import { loadMeta, type ContentMeta } from '../content/loader';
 import { Info as InfoIcon, ExternalLink } from 'lucide-react';
-import { Skeleton, SkeletonLine } from '../components/Skeleton';
 
 export default function Info() {
-  const [meta, setMeta] = useState<ContentBundle['meta'] | null>(null);
+  const [meta, setMeta] = useState<ContentMeta | null>(null);
 
   useEffect(() => {
-    void loadContent().then((c) => setMeta(c.meta));
+    loadMeta()
+      .then(setMeta)
+      .catch(() => {});
   }, []);
 
   const sections = [

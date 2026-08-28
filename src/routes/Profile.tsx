@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Flame, Star, TrendingUp, BookOpen, Trophy } from 'lucide-react';
 import { progress, xpToLevel, type UserProfile } from '../lib/progress/store';
-import { loadContent } from '../content/loader';
+import { loadMeta } from '../content/loader';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { Skeleton, SkeletonLine } from '../components/Skeleton';
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -12,12 +11,12 @@ export default function Profile() {
 
   useEffect(() => {
     (async () => {
-      const [p, c] = await Promise.all([
+      const [p, m] = await Promise.all([
         progress.getProfile(),
-        loadContent(),
+        loadMeta(),
       ]);
       setProfile(p);
-      setMeta(c.meta);
+      setMeta({ statistics: m.statistics, importedAt: m.importedAt });
       const a = await progress.listAchievements();
       setAchievements(a);
     })();

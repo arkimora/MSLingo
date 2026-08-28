@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, ChevronRight } from 'lucide-react';
-import { loadContent, type ContentBundle } from '../content/loader';
+import { loadSigns } from '../content/loader';
 import { progress } from '../lib/progress/store';
 import { reviewCard, newSignMastery } from '../lib/srs';
 import { LearnSkeleton } from '../components/Skeleton';
+import type { Sign } from '../content/schema';
 
 const LESSON_SIZE = 5;
 
 export default function Learn() {
-  const [content, setContent] = useState<ContentBundle | null>(null);
+  const [signs, setSigns] = useState<Sign[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<{
     queue: number[];
     current: number;
@@ -24,19 +26,23 @@ export default function Learn() {
 
   useEffect(() => {
     (async () => {
-      const c = await loadContent();
-      setContent(c);
+      try {
+        const s = await loadSigns();
+        setSigns(s);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Ачааллаж чадсангүй');
+      }
     })();
   }, []);
 
-  const startSession = useCallback(async (signs: ContentBundle['signs']) => {
+  const startSession = useCallback(async (signsData: Sign[]) => {
     const newIds = await progress.newSigns(LESSON_SIZE);
     if (newIds.length === 0) {
       setEmptyState(true);
       return;
     }
     const shuffled = [...newIds].sort(() => Math.random() - 0.5);
-    const sign = signs.find((s) => s.id === shuffled[0]);
+    const sign = signsData.find((s) => s.id === shuffled[0]);
     if (!sign) {
       setEmptyState(true);
       return;
@@ -45,7 +51,7 @@ export default function Learn() {
       queue: shuffled,
       current: 0,
       phase: 'question',
-      choices: buildChoices(signs, sign.id),
+      choices: buildChoices(signsData, sign.id),
       selected: null,
       correct: false,
       xp: 0,
@@ -53,13 +59,13 @@ export default function Learn() {
   }, []);
 
   useEffect(() => {
-    if (content && !session && !emptyState) {
-      void startSession(content.signs);
+    if (signs && !session && !emptyState) {
+      void startSession(signs);
     }
-  }, [content, session, emptyState, startSession]);
+  }, [signs, session, emptyState, startSession]);
 
-  function buildChoices(signs: ContentBundle['signs'], correctId: number): number[] {
-    const others = signs
+  function buildChoices(signsData: Sign[], correctId: number): number[] {
+    const others = signsData
       .filter((s) => s.id !== correctId)
       .sort(() => Math.random() - 0.5)
       .slice(0, 3)
@@ -68,16 +74,16 @@ export default function Learn() {
   }
 
   const handleSelect = useCallback((choiceId: number) => {
-    if (!session || session.phase !== 'question' || !content) return;
-    const sign = content.signs.find((s) => s.id === session.queue[session.current]);
+    if (!session || session.phase !== 'question' || !signs) return;
+    const sign = signs.find((s) => s.id === session.queue[session.current]);
     if (!sign) return;
     const correct = choiceId === sign.id;
     setSession((prev) => prev ? { ...prev, selected: choiceId, correct, phase: 'answer' } : null);
-  }, [session, content]);
+  }, [session, signs]);
 
   const handleContinue = useCallback(async () => {
-    if (!session || !content) return;
-    const sign = content.signs.find((s) => s.id === session.queue[session.current]);
+    if (!session || !signs) return;
+    const sign = signs.find((s) => s.id === session.queue[session.current]);
     if (!sign) return;
     const earnedXp = session.correct ? 10 : 0;
 
@@ -110,7 +116,7 @@ export default function Learn() {
       return;
     }
 
-    const nextSign = content.signs.find((s) => s.id === session.queue[next]);
+    const nextSign = signs.find((s) => s.id === session.queue[next]);
     if (!nextSign) return;
     setSession((prev) => prev ? {
       ...prev,
@@ -119,11 +125,26 @@ export default function Learn() {
       selected: null,
       correct: false,
       xp: prev.xp + earnedXp,
-      choices: buildChoices(content.signs, nextSign.id),
+      choices: buildChoices(signs, nextSign.id),
     } : null);
-  }, [session, content, navigate]);
+  }, [session, signs, navigate]);
 
-  if (!content) return <LearnSkeleton />;
+  if (error) {
+    return (
+      <div className="text-center py-20 space-y-3">
+        <p className="text-ink-500 dark:text-ink-200">Ачааллаж чадсангүй</p>
+        <p className="text-xs font-mono text-ink-300">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-brass-700 dark:text-brass-400 hover:underline"
+        >
+          Дахин оролдох
+        </button>
+      </div>
+    );
+  }
+
+  if (!signs) return <LearnSkeleton />;
 
   if (emptyState) {
     return (
@@ -142,7 +163,7 @@ export default function Learn() {
 
   if (!session) return <LearnSkeleton />;
 
-  const sign = content.signs.find((s) => s.id === session.queue[session.current])!;
+  const sign = signs.find((s) => s.id === session.queue[session.current])!;
   const progress_ = session.current + 1;
 
   return (
@@ -178,7 +199,7 @@ export default function Learn() {
         />
         <div className="p-4 space-y-2">
           {session.choices.map((choiceId) => {
-            const choiceSign = content.signs.find((s) => s.id === choiceId)!;
+            const choiceSign = signs.find((s) => s.id === choiceId)!;
             const isSelected = session.selected === choiceId;
             const isCorrect = choiceId === sign.id;
             return (

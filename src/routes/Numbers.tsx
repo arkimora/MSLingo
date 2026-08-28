@@ -1,16 +1,32 @@
 import { useEffect, useState } from 'react';
-import { loadContent, type ContentBundle } from '../content/loader';
+import { loadNumbers } from '../content/loader';
 import { Hash } from 'lucide-react';
 import { GridSkeleton } from '../components/Skeleton';
+import type { NumberEntry } from '../content/schema';
 
 export default function Numbers() {
-  const [content, setContent] = useState<ContentBundle | null>(null);
+  const [entries, setEntries] = useState<NumberEntry[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void loadContent().then(setContent);
+    loadNumbers()
+      .then(setEntries)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Ачааллаж чадсангүй'));
   }, []);
 
-  if (!content) {
+  if (error) {
+    return (
+      <div className="text-center py-20 space-y-3">
+        <p className="text-ink-500 dark:text-ink-200">Ачааллаж чадсангүй</p>
+        <p className="text-xs font-mono text-ink-300">{error}</p>
+        <button onClick={() => window.location.reload()} className="text-brass-700 dark:text-brass-400 hover:underline">
+          Дахин оролдох
+        </button>
+      </div>
+    );
+  }
+
+  if (!entries) {
     return (
       <div className="space-y-6 max-w-4xl mx-auto">
         <header className="border-b rule pb-6">
@@ -38,40 +54,46 @@ export default function Numbers() {
         </p>
       </header>
 
-      <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-px bg-ink-100 dark:bg-ink-700 border rule rounded-md overflow-hidden">
-        {content.numbers.map((entry) => (
-          <div
-            key={String(entry.value)}
-            className="bg-parchment-50 dark:bg-ink-800 text-center"
-          >
-            {entry.media.posterUrl && (
-              <img
-                src={entry.media.posterUrl}
-                alt={`Тоо ${entry.value}`}
-                className="w-full aspect-square object-contain bg-parchment-100 dark:bg-ink-900"
-                loading="lazy"
-              />
-            )}
-            {entry.media.url && (
-              <video
-                src={entry.media.url}
-                poster={entry.media.posterUrl}
-                autoPlay
-                muted
-                loop
-                playsInline
-                controls
-                className="w-full aspect-square"
-                aria-label={`Тоо ${entry.value}`}
-              />
-            )}
-            <p className="py-2 font-serif text-lg font-semibold text-ink-800 dark:text-parchment-50">{entry.value}</p>
-            {entry.context && (
-              <p className="pb-2 text-xs text-ink-400 dark:text-ink-300 uppercase tracking-wider">{entry.context}</p>
-            )}
-          </div>
-        ))}
-      </div>
+      {entries.length === 0 ? (
+        <p className="text-center text-ink-400 dark:text-ink-300 py-16">
+          Тоон дохионы мэдээлэл хараахан бэлэн болоогүй байна.
+        </p>
+      ) : (
+        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-px bg-ink-100 dark:bg-ink-700 border rule rounded-md overflow-hidden">
+          {entries.map((entry) => (
+            <div
+              key={String(entry.value)}
+              className="bg-parchment-50 dark:bg-ink-800 text-center"
+            >
+              {entry.media.posterUrl && (
+                <img
+                  src={entry.media.posterUrl}
+                  alt={`Тоо ${entry.value}`}
+                  className="w-full aspect-square object-contain bg-parchment-100 dark:bg-ink-900"
+                  loading="lazy"
+                />
+              )}
+              {entry.media.url && (
+                <video
+                  src={entry.media.url}
+                  poster={entry.media.posterUrl}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  controls
+                  className="w-full aspect-square"
+                  aria-label={`Тоо ${entry.value}`}
+                />
+              )}
+              <p className="py-2 font-serif text-lg font-semibold text-ink-800 dark:text-parchment-50">{entry.value}</p>
+              {entry.context && (
+                <p className="pb-2 text-xs text-ink-400 dark:text-ink-300 uppercase tracking-wider">{entry.context}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

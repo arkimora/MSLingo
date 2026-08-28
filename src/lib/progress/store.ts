@@ -199,7 +199,7 @@ export class LocalProgressStore implements ProgressStore {
   async newSigns(limit: number): Promise<number[]> {
     const all = await db.mastery.toArray();
     const seen = new Set(all.map((m) => m.signId));
-    const { signs } = await import('../../content/loader').then((m) => m.loadContent());
+    const signs = await import('../../content/loader').then((m) => m.loadSigns());
     return signs
       .filter((s) => !seen.has(s.id))
       .slice(0, limit)

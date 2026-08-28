@@ -1,20 +1,20 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { ArrowRight, Flame, BookOpen, RotateCcw, GraduationCap } from 'lucide-react';
-import { loadContent, type ContentBundle } from '../content/loader';
+import { loadMeta } from '../content/loader';
 import { progress } from '../lib/progress/store';
 import { HomeSkeleton } from '../components/Skeleton';
 
 export default function Home() {
-  const [content, setContent] = useState<ContentBundle | null>(null);
+  const [meta, setMeta] = useState<{ signs: number; topics: number } | null>(null);
   const [stats, setStats] = useState({ dueCount: 0, learned: 0, xp: 0, streak: 0 });
 
   useEffect(() => {
     (async () => {
-      const c = await loadContent();
+      const m = await loadMeta();
+      setMeta({ signs: m.statistics.signs, topics: m.statistics.topics });
       const profile = await progress.getProfile();
       const due = await progress.dueForReview();
-      setContent(c);
       setStats({
         dueCount: due.length,
         learned: profile.totalSignsLearned,
@@ -24,7 +24,7 @@ export default function Home() {
     })();
   }, []);
 
-  if (!content) return <HomeSkeleton />;
+  if (!meta) return <HomeSkeleton />;
 
   return (
     <div className="space-y-10">
@@ -37,7 +37,7 @@ export default function Home() {
         <p className="mt-4 text-lg text-ink-500 dark:text-ink-200 max-w-2xl text-balance">
           mnsl.mn-ийн толь бичгээс бүтэцтэйгээр суралц.{' '}
           <span className="text-ink-700 dark:text-parchment-50 font-medium">
-            {content.signs.length.toLocaleString()} дохио, {content.meta.statistics.topics} сэдэв.
+            {meta.signs.toLocaleString()} дохио, {meta.topics} сэдэв.
           </span>
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
@@ -68,7 +68,7 @@ export default function Home() {
       <section className="grid sm:grid-cols-3 gap-px bg-ink-100 dark:bg-ink-700 border rule rounded-xl overflow-hidden">
         <StatTile icon={Flame} label="Стреак" value={stats.streak} unit="өдөр" />
         <StatTile icon={GraduationCap} label="Суралцсан" value={stats.learned} unit="дохио" />
-        <StatTile icon={BookOpen} label="Нийт" value={content.signs.length} unit="дохио" />
+        <StatTile icon={BookOpen} label="Нийт" value={meta.signs} unit="дохио" />
       </section>
 
       <section className="space-y-4">
