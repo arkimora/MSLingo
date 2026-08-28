@@ -187,6 +187,7 @@ export default function Learn() {
           <p className="font-semibold tracking-tight text-center mt-1">Энэ дохио ямар утгатай вэ?</p>
         </div>
         <video
+          key={sign.id}
           src={sign.primaryMedia.url}
           poster={sign.primaryMedia.posterUrl}
           autoPlay
@@ -194,6 +195,7 @@ export default function Learn() {
           loop
           playsInline
           controls
+          preload="auto"
           className="w-full aspect-video bg-black"
           aria-label="Дохионы видео"
         />
