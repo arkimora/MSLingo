@@ -1,0 +1,46 @@
+{
+  "name": "mslingo",
+  "version": "0.1.0",
+  "description": "Offline Mongolian Sign Language learning app — content sourced from mnsl.mn",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "validate:msl": "tsx scripts/validate-msl.ts",
+    "sync:mnsl": "tsx scripts/sync-mnsl.ts",
+    "extract:info": "tsx scripts/extract-info.ts"
+  },
+  "dependencies": {
+    "dexie": "^4.0.10",
+    "flexsearch": "^0.7.43",
+    "framer-motion": "^11.11.11",
+    "lucide-react": "^0.460.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.1",
+    "ts-fsrs": "^5.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.2",
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "cheerio": "^1.0.0",
+    "postcss": "^8.4.47",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3",
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^2.1.8",
+    "workbox-window": "^7.3.0"
+  }
+}

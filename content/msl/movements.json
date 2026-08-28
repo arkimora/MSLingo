@@ -1,0 +1,39 @@
+{
+  "movements": [
+    {
+      "id": "x1",
+      "name": "X1",
+      "count": 1156
+    },
+    {
+      "id": "x2",
+      "name": "X2",
+      "count": 93
+    },
+    {
+      "id": "x3",
+      "name": "X3",
+      "count": 409
+    },
+    {
+      "id": "x4",
+      "name": "X4",
+      "count": 246
+    },
+    {
+      "id": "x5",
+      "name": "X5",
+      "count": 58
+    },
+    {
+      "id": "x6",
+      "name": "X6",
+      "count": 41
+    },
+    {
+      "id": "x7",
+      "name": "X7",
+      "count": 10
+    }
+  ]
+}

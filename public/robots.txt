@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mnsl.mn/sitemap_index.xml
+
+Disallow: /src/
+Disallow: /scripts/
+Disallow: /content/
+Disallow: /plan/
+Disallow: /node_modules/
+Disallow: /.git/
+Disallow: /tests/

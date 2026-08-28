@@ -1,0 +1,25 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.env
+.env.local
+.env.*.local
+*.log
+coverage/
+playwright-report/
+test-results/
+.vite/
+.cache/
+# TWA Android build output
+twa/.gradle/
+twa/gradle/wrapper/gradle-wrapper.jar
+twa/app/build/
+twa/build/
+twa/local.properties
+*.keystore
+keystore.properties

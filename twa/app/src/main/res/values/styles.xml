@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        MSLingo TWA — light theme.
+        We use AppCompat (not Material Components) because the TWA shell only
+        needs to host a Custom Tab and we want zero extra dependencies. The
+        theme just removes the action bar and sets our brass/ink palette so
+        the status bar blends with the rest of the UI.
+    -->
+    <style name="Theme.MSLingo.TWA" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/background</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

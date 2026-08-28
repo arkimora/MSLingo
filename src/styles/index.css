@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+/* ── Dark mode variant ──────────────────────────
+   Tailwind v4 doesn't auto-register `dark:`. We pin it to the `.dark`
+   class on <html> so every `dark:bg-ink-900`, `dark:text-parchment-50`,
+   etc. actually applies when the user enables dark mode. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * MSLingo — Editorial palette
+ *
+ * Light:  warm parchment bg, ink-charcoal text, antique brass accent
+ * Dark:   deep ink bg, bone-cream text, soft champagne accent
+ *
+ * Reference vibe: Penguin Classics, NYT, Notion, Linear.
+ * Restrained, considered, never loud.
+ */
+
+@theme {
+  /* ── Brass (primary) ───────────────────────────── */
+  --color-brass-50:  #faf7f1;
+  --color-brass-100: #f1ead9;
+  --color-brass-200: #e3d4b0;
+  --color-brass-300: #cdb682;
+  --color-brass-400: #b89858;
+  --color-brass-500: #9c7d3f;
+  --color-brass-600: #806430;
+  --color-brass-700: #634c25;   /* anchor */
+  --color-brass-800: #4a381b;
+  --color-brass-900: #2f2411;
+
+  /* ── Ink (dark surfaces / text) ──────────────── */
+  --color-ink-50:  #f6f5f3;
+  --color-ink-100: #e8e6e1;
+  --color-ink-200: #c9c6be;
+  --color-ink-300: #9a9690;
+  --color-ink-400: #6b6862;
+  --color-ink-500: #4a4843;
+  --color-ink-600: #34322e;
+  --color-ink-700: #24231f;
+  --color-ink-800: #18171a;   /* anchor (light text) */
+  --color-ink-900: #0e0d10;   /* anchor (dark bg) */
+
+  /* ── Parchment (neutral) ─────────────────────── */
+  --color-parchment-50:  #fdfcf8;
+  --color-parchment-100: #f7f3ea;
+  --color-parchment-200: #ede5d2;
+  --color-parchment-300: #d9ccae;
+  --color-parchment-400: #b8a47e;
+  --color-parchment-500: #8e7a5a;
+  --color-parchment-600: #6d5d44;
+  --color-parchment-700: #534633;
+  --color-parchment-800: #3a3123;
+  --color-parchment-900: #221d15;
+
+  /* ── Primary alias (brass) ───────────────────── */
+  --color-primary-50:  var(--color-brass-50);
+  --color-primary-100: var(--color-brass-100);
+  --color-primary-200: var(--color-brass-200);
+  --color-primary-300: var(--color-brass-300);
+  --color-primary-400: var(--color-brass-400);
+  --color-primary-500: var(--color-brass-500);
+  --color-primary-600: var(--color-brass-600);
+  --color-primary-700: var(--color-brass-700);
+  --color-primary-800: var(--color-brass-800);
+  --color-primary-900: var(--color-brass-900);
+}
+
+/* ── Reset & base ──────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: light;
+  height: 100%;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: #fdfcf8;
+  color: #18171a;
+  font-family: "Inter", "Open Sans", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+  letter-spacing: -0.011em;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+/* ── Dark mode — toggle .dark on <html> ────────── */
+html.dark {
+  color-scheme: dark;
+  background-color: #0e0d10;
+  color: #e8e6e1;
+}
+
+html.dark body {
+  background-color: #0e0d10;
+  color: #e8e6e1;
+}
+
+/* ── Links ──────────────────────────────────────── */
+a {
+  color: #634c25;
+  text-decoration-color: transparent;
+  transition: color 150ms ease;
+}
+
+a:hover {
+  color: #4a381b;
+  text-decoration-color: currentColor;
+}
+
+html.dark a {
+  color: #cdb682;
+}
+
+html.dark a:hover {
+  color: #e3d4b0;
+}
+
+/* ── Focus ring ─────────────────────────────────── */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Accessible focus indicator — uses brass ring */
+  .focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 3px #cdb68266;
+  }
+
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px #cdb68266;
+  }
+
+  /* Subtle editorial divider */
+  .rule {
+    border-color: #e8e6e166;
+  }
+
+  html.dark .rule {
+    border-color: #24231f66;
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Scrollbar ──────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d9ccae;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b8a47e;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #24231f;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #34322e;
+}
+
+/* ── Text selection ─────────────────────────────── */
+::selection {
+  background-color: #cdb68266;
+  color: inherit;
+}
+html.dark ::selection {
+  background-color: #634c2566;
+}

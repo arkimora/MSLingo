@@ -1,0 +1,46 @@
+apply plugin: 'com.android.application'
+
+def appUrl = 'https://mslingo.app'
+def appName = 'MSLingo'
+
+android {
+  namespace 'app.mslingo.twa'
+  compileSdkVersion 35
+
+  defaultConfig {
+    applicationId 'app.mslingo.twa'
+    minSdkVersion 22
+    targetSdkVersion 35
+    versionCode 1
+    versionName '0.1.0'
+  }
+
+  signingConfigs {
+    release {
+      // Loaded from keystore.properties or environment — see README in this folder
+      if (System.getenv('KEYSTORE_PATH')) {
+        storeFile file(System.getenv('KEYSTORE_PATH'))
+        storePassword System.getenv('KEYSTORE_PASSWORD')
+        keyAlias System.getenv('KEY_ALIAS')
+        keyPassword System.getenv('KEY_PASSWORD')
+      }
+    }
+  }
+
+  buildTypes {
+    debug {
+      // Debug APKs are signed automatically by the Android Gradle Plugin
+      // with a debug keystore.
+    }
+    release {
+      signingConfig signingConfigs.release
+      minifyEnabled true
+      shrinkResources true
+    }
+  }
+}
+
+dependencies {
+  implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+  implementation 'androidx.appcompat:appcompat:1.6.1'
+}
