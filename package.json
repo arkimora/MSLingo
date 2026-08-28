@@ -12,6 +12,7 @@
     "validate:msl": "tsx scripts/validate-msl.ts",
     "sync:mnsl": "tsx scripts/sync-mnsl.ts",
     "sync:numbers": "tsx scripts/sync-numbers.ts",
+    "sync:fingerspelling": "tsx scripts/sync-fingerspelling.ts",
     "extract:info": "tsx scripts/extract-info.ts"
   },
   "dependencies": {

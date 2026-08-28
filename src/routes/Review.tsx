@@ -95,6 +95,7 @@ export default function Review() {
 
       <div className="rounded-md border rule overflow-hidden bg-parchment-50/30 dark:bg-ink-800/30">
         <video
+          key={sign.id}
           src={sign.primaryMedia.url}
           poster={sign.primaryMedia.posterUrl}
           autoPlay
@@ -102,6 +103,7 @@ export default function Review() {
           loop
           playsInline
           controls
+          preload="auto"
           className="w-full aspect-video bg-black"
           aria-label="Дохионы видео"
         />

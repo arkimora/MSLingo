@@ -65,16 +65,9 @@ export default function Fingerspelling() {
               key={entry.letter}
               className="bg-parchment-50 dark:bg-ink-800 text-center"
             >
-              {entry.media.posterUrl && (
-                <img
-                  src={entry.media.posterUrl}
-                  alt={`Хурууны ${entry.letter}`}
-                  className="w-full aspect-square object-contain bg-parchment-100 dark:bg-ink-900"
-                  loading="lazy"
-                />
-              )}
               {entry.media.url && (
                 <video
+                  key={`v-${entry.media.id}`}
                   src={entry.media.url}
                   poster={entry.media.posterUrl}
                   autoPlay
@@ -82,7 +75,8 @@ export default function Fingerspelling() {
                   loop
                   playsInline
                   controls
-                  className="w-full aspect-square"
+                  preload="metadata"
+                  className="w-full aspect-square object-contain bg-black"
                   aria-label={`Хурууны ${entry.letter}`}
                 />
               )}
