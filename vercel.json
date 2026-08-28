@@ -1,6 +1,16 @@
 {
   "rewrites": [
-    { "source": "/.well-known/assetlinks.json", "destination": "/well-known/assetlinks.json" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/.well-known/assetlinks.json",
+      "destination": "/well-known/assetlinks.json"
+    },
+    {
+      "source": "/content/msl/(.*)",
+      "destination": "/content/msl/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
