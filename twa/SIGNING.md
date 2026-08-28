@@ -298,7 +298,7 @@ Two things to check:
 
 1. **Digital Asset Links** — without valid `assetlinks.json` at `https://your-domain/.well-known/assetlinks.json` matching the SHA-256 of your signing key, Android shows a "this app is not trusted" toast and exits. Generate the file with Bubblewrap: `bubblewrap verify`.
 
-2. **Target URL mismatch** — `twa/app/src/main/AndroidManifest.xml` has `https://mslingo.app` as the trusted host. Change it to whatever domain you're actually deploying to.
+2. **Target URL mismatch** — `twa/app/src/main/AndroidManifest.xml` has a trusted host. Make sure it matches the domain you're actually deploying to (e.g. `https://mslingo.vercel.app`).
 
 ---
 

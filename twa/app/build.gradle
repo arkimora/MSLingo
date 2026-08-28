@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 
-def appUrl = 'https://mslingo.app'
+def appUrl = 'https://mslingo.vercel.app'
 def appName = 'MSLingo'
 
 android {

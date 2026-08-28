@@ -30,7 +30,7 @@
       -->
       <meta-data
         android:name="android.support.customtabs.trustedwebactivity.target"
-        android:value="https://mslingo.app" />
+        android:value="https://mslingo.vercel.app" />
     </activity>
   </application>
 </manifest>
