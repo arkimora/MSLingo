@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, ChevronRight } from 'lucide-react';
-import { loadContent } from '../content/loader';
+import { loadContent, type ContentBundle } from '../content/loader';
 import { progress } from '../lib/progress/store';
 import { reviewCard, newSignMastery } from '../lib/srs';
+import { LearnSkeleton } from '../components/Skeleton';
 
 const LESSON_SIZE = 5;
 
 export default function Learn() {
-  const { signs } = loadContent();
-  const navigate = useNavigate();
+  const [content, setContent] = useState<ContentBundle | null>(null);
   const [session, setSession] = useState<{
     queue: number[];
     current: number;
@@ -19,35 +19,46 @@ export default function Learn() {
     correct: boolean;
     xp: number;
   } | null>(null);
+  const [emptyState, setEmptyState] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (signs.length === 0) return;
-    if (session) return;
-    startSession();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signs]);
+    (async () => {
+      const c = await loadContent();
+      setContent(c);
+    })();
+  }, []);
 
-  async function startSession() {
+  const startSession = useCallback(async (signs: ContentBundle['signs']) => {
     const newIds = await progress.newSigns(LESSON_SIZE);
     if (newIds.length === 0) {
-      navigate('/review');
+      setEmptyState(true);
       return;
     }
     const shuffled = [...newIds].sort(() => Math.random() - 0.5);
-    const sign = signs.find((s) => s.id === shuffled[0])!;
-    const choices = buildChoices(sign.id);
+    const sign = signs.find((s) => s.id === shuffled[0]);
+    if (!sign) {
+      setEmptyState(true);
+      return;
+    }
     setSession({
       queue: shuffled,
       current: 0,
       phase: 'question',
-      choices,
+      choices: buildChoices(signs, sign.id),
       selected: null,
       correct: false,
       xp: 0,
     });
-  }
+  }, []);
 
-  function buildChoices(correctId: number): number[] {
+  useEffect(() => {
+    if (content && !session && !emptyState) {
+      void startSession(content.signs);
+    }
+  }, [content, session, emptyState, startSession]);
+
+  function buildChoices(signs: ContentBundle['signs'], correctId: number): number[] {
     const others = signs
       .filter((s) => s.id !== correctId)
       .sort(() => Math.random() - 0.5)
@@ -57,15 +68,17 @@ export default function Learn() {
   }
 
   const handleSelect = useCallback((choiceId: number) => {
-    if (!session || session.phase !== 'question') return;
-    const sign = signs.find((s) => s.id === session.queue[session.current])!;
+    if (!session || session.phase !== 'question' || !content) return;
+    const sign = content.signs.find((s) => s.id === session.queue[session.current]);
+    if (!sign) return;
     const correct = choiceId === sign.id;
     setSession((prev) => prev ? { ...prev, selected: choiceId, correct, phase: 'answer' } : null);
-  }, [session, signs]);
+  }, [session, content]);
 
   const handleContinue = useCallback(async () => {
-    if (!session) return;
-    const sign = signs.find((s) => s.id === session.queue[session.current])!;
+    if (!session || !content) return;
+    const sign = content.signs.find((s) => s.id === session.queue[session.current]);
+    if (!sign) return;
     const earnedXp = session.correct ? 10 : 0;
 
     const mastery = await progress.getMastery(sign.id) ?? newSignMastery(sign.id);
@@ -97,7 +110,8 @@ export default function Learn() {
       return;
     }
 
-    const nextSign = signs.find((s) => s.id === session.queue[next])!;
+    const nextSign = content.signs.find((s) => s.id === session.queue[next]);
+    if (!nextSign) return;
     setSession((prev) => prev ? {
       ...prev,
       current: next,
@@ -105,29 +119,30 @@ export default function Learn() {
       selected: null,
       correct: false,
       xp: prev.xp + earnedXp,
-      choices: buildChoices(nextSign.id),
+      choices: buildChoices(content.signs, nextSign.id),
     } : null);
-  }, [session, signs, navigate]);
+  }, [session, content, navigate]);
 
-  if (signs.length === 0) {
+  if (!content) return <LearnSkeleton />;
+
+  if (emptyState) {
     return (
-      <div className="text-center py-20">
-        <h1 className="text-2xl font-semibold tracking-tight mb-2">Дохио алга</h1>
-        <p className="text-ink-500 dark:text-ink-200">npm run sync:mnsl ажиллуулсны дараа дахин оролдоно уу.</p>
+      <div className="text-center py-20 space-y-3">
+        <h1 className="text-2xl font-semibold tracking-tight">Шинэ дохио байхгүй</h1>
+        <p className="text-ink-500 dark:text-ink-200">Өнөөдөр бүх шинэ дохио үзсэн. Дахин үзэх хэсгээс хичээлээ үргэлжлүүлээрэй.</p>
+        <button
+          onClick={() => navigate('/review')}
+          className="mt-4 px-5 py-2.5 rounded-md bg-ink-800 text-parchment-50 font-medium hover:bg-ink-700 dark:bg-brass-600 dark:text-ink-900 dark:hover:bg-brass-500 transition"
+        >
+          Дахин үзэх рүү очих
+        </button>
       </div>
     );
   }
 
-  if (!session) {
-    return (
-      <div className="text-center py-20">
-        <div className="animate-spin h-8 w-8 border-2 border-ink-200 border-t-ink-800 dark:border-ink-700 dark:border-t-brass-500 rounded-full mx-auto mb-4" />
-        <p className="text-ink-500 dark:text-ink-200">Хичээл ачаалж байна...</p>
-      </div>
-    );
-  }
+  if (!session) return <LearnSkeleton />;
 
-  const sign = signs.find((s) => s.id === session.queue[session.current])!;
+  const sign = content.signs.find((s) => s.id === session.queue[session.current])!;
   const progress_ = session.current + 1;
 
   return (
@@ -163,7 +178,7 @@ export default function Learn() {
         />
         <div className="p-4 space-y-2">
           {session.choices.map((choiceId) => {
-            const choiceSign = signs.find((s) => s.id === choiceId)!;
+            const choiceSign = content.signs.find((s) => s.id === choiceId)!;
             const isSelected = session.selected === choiceId;
             const isCorrect = choiceId === sign.id;
             return (

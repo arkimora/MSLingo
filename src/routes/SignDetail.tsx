@@ -1,36 +1,59 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Heart, ExternalLink } from 'lucide-react';
-import { findSign, findTopic, signNeighbors } from '../content/loader';
+import { loadContent, findSign, findTopic, signNeighbors } from '../content/loader';
 import { progress } from '../lib/progress/store';
+import type { Sign } from '../content/schema';
+import { SignDetailSkeleton } from '../components/Skeleton';
 
 export default function SignDetail() {
   const { id } = useParams<{ id: string }>();
-  const sign = id ? findSign(Number(id)) : undefined;
+  const [sign, setSign] = useState<Sign | null>(null);
+  const [prev, setPrev] = useState<Sign | null>(null);
+  const [next, setNext] = useState<Sign | null>(null);
   const [isFav, setIsFav] = useState(false);
+  const [loading, setLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    (async () => {
+      if (!id) return;
+      const numId = Number(id);
+      const found = await findSign(numId);
+      setSign(found ?? null);
+      if (found) {
+        const neighbors = await signNeighbors(found.id);
+        if (neighbors.prev) setPrev(neighbors.prev);
+        if (neighbors.next) setNext(neighbors.next);
+        const favs = await progress.listFavorites();
+        setIsFav(favs.includes(found.id));
+      }
+      setLoading(false);
+    })();
+  }, [id]);
+
+  const handleFav = async () => {
+    if (!sign) return;
+    const faved = await progress.toggleFavorite(sign.id);
+    setIsFav(faved);
+  };
+
+  if (loading) return <SignDetailSkeleton />;
 
   if (!sign) {
     return (
-      <div className="text-center py-20">
+      <div className="text-center py-20 space-y-3">
         <h1 className="text-2xl font-semibold tracking-tight">Дохио олдсонгүй</h1>
-        <p className="text-ink-500 dark:text-ink-200 mt-2 font-mono text-sm">ID: {id}</p>
-        <Link to="/dictionary" className="mt-4 inline-block text-brass-700 dark:text-brass-400 hover:underline">Толь руу буцах</Link>
+        <p className="text-ink-500 dark:text-ink-200 font-mono text-sm">ID: {id}</p>
+        <Link to="/dictionary" className="inline-block text-brass-700 dark:text-brass-400 hover:underline">Толь руу буцах</Link>
       </div>
     );
   }
 
-  const topicLinks = sign.topics.map((t) => {
-    const topic = findTopic(t);
+  const topicLinks = sign.topics.map(async (t) => {
+    const topic = await findTopic(t);
     return { slug: t, name: topic?.name ?? t };
   });
-
-  const { prev, next } = signNeighbors(sign.id);
-
-  const handleFav = async () => {
-    const faved = await progress.toggleFavorite(sign.id);
-    setIsFav(faved);
-  };
 
   return (
     <article className="space-y-8 max-w-3xl mx-auto">
@@ -79,17 +102,17 @@ export default function SignDetail() {
         />
       </div>
 
-      {topicLinks.length > 0 && (
+      {sign.topics.length > 0 && (
         <section>
           <p className="text-xs uppercase tracking-wider text-ink-400 dark:text-ink-300 mb-3">Сэдэв</p>
           <div className="flex flex-wrap gap-1.5">
-            {topicLinks.map(({ slug, name }) => (
+            {sign.topics.map((slug) => (
               <Link
                 key={slug}
                 to={`/dictionary?topic=${encodeURIComponent(slug)}`}
                 className="px-3 py-1 rounded-md border rule text-sm text-ink-600 dark:text-ink-200 hover:border-brass-400 hover:text-ink-800 dark:hover:text-parchment-50 dark:hover:border-brass-500 transition"
               >
-                {name}
+                {slug}
               </Link>
             ))}
           </div>
@@ -136,22 +159,15 @@ export default function SignDetail() {
                 {v.type === 'different_sign_same_meaning' ? 'Дохио өөр, утга адил' : 'Дохио ижил, утга өөр'}
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {v.relatedSignIds.map((rid) => {
-                  const related = findSign(rid);
-                  return related ? (
-                    <Link
-                      key={rid}
-                      to={`/dictionary/${rid}`}
-                      className="px-3 py-1.5 rounded-md border rule text-sm hover:border-ink-700 hover:text-ink-800 dark:hover:border-brass-500 dark:hover:text-parchment-50 transition"
-                    >
-                      {related.headword}
-                    </Link>
-                  ) : (
-                    <span key={rid} className="px-3 py-1.5 border rule rounded-md text-sm text-ink-300 font-mono">
-                      #{rid}
-                    </span>
-                  );
-                })}
+                {v.relatedSignIds.map((rid) => (
+                  <Link
+                    key={rid}
+                    to={`/dictionary/${rid}`}
+                    className="px-3 py-1.5 rounded-md border rule text-sm hover:border-ink-700 hover:text-ink-800 dark:hover:border-brass-500 dark:hover:text-parchment-50 transition"
+                  >
+                    #{rid}
+                  </Link>
+                ))}
               </div>
             </div>
           ))}

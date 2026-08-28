@@ -1,8 +1,35 @@
-import { loadContent } from '../content/loader';
+import { useEffect, useState } from 'react';
+import { loadContent, type ContentBundle } from '../content/loader';
 import { Library } from 'lucide-react';
+import { Skeleton, SkeletonLine } from '../components/Skeleton';
 
 export default function Grammar() {
-  const { grammar } = loadContent();
+  const [content, setContent] = useState<ContentBundle | null>(null);
+
+  useEffect(() => {
+    void loadContent().then(setContent);
+  }, []);
+
+  if (!content) {
+    return (
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <header className="border-b rule pb-6 space-y-3">
+          <Skeleton className="h-3 w-16 rounded" />
+          <Skeleton className="h-9 w-32 rounded" />
+          <SkeletonLine className="w-72" />
+        </header>
+        <div className="border rule rounded-md overflow-hidden">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="px-5 py-4 border-b rule last:border-b-0 space-y-2">
+              <Skeleton className="h-5 w-48 rounded" />
+              <SkeletonLine className="w-full" />
+              <SkeletonLine className="w-3/4" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -17,26 +44,22 @@ export default function Grammar() {
         </p>
       </header>
 
-      {grammar.length === 0 ? (
-        <p className="text-center text-ink-400 dark:text-ink-300 py-16">npm run sync:mnsl ажиллуулсны дараа агуулга гарч ирнэ.</p>
-      ) : (
-        <div className="divide-y rule border rule rounded-md overflow-hidden">
-          {grammar.map((topic) => (
-            <a
-              key={topic.id}
-              href={topic.sourceUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="block px-5 py-4 hover:bg-ink-50 dark:hover:bg-ink-800 transition"
-            >
-              <h2 className="font-semibold text-ink-800 dark:text-parchment-50">{topic.title}</h2>
-              <p className="text-sm text-ink-500 dark:text-ink-200 mt-1 line-clamp-2">
-                {topic.body.replace(/<[^>]+>/g, '').slice(0, 200)}…
-              </p>
-            </a>
-          ))}
-        </div>
-      )}
+      <div className="divide-y rule border rule rounded-md overflow-hidden">
+        {content.grammar.map((topic) => (
+          <a
+            key={topic.id}
+            href={topic.sourceUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="block px-5 py-4 hover:bg-ink-50 dark:hover:bg-ink-800 transition"
+          >
+            <h2 className="font-semibold text-ink-800 dark:text-parchment-50">{topic.title}</h2>
+            <p className="text-sm text-ink-500 dark:text-ink-200 mt-1 line-clamp-2">
+              {topic.body.replace(/<[^>]+>/g, '').slice(0, 200)}…
+            </p>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }

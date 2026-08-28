@@ -1,8 +1,14 @@
-import { loadContent } from '../content/loader';
+import { useEffect, useState } from 'react';
+import { loadContent, type ContentBundle } from '../content/loader';
 import { Info as InfoIcon, ExternalLink } from 'lucide-react';
+import { Skeleton, SkeletonLine } from '../components/Skeleton';
 
 export default function Info() {
-  const { meta } = loadContent();
+  const [meta, setMeta] = useState<ContentBundle['meta'] | null>(null);
+
+  useEffect(() => {
+    void loadContent().then((c) => setMeta(c.meta));
+  }, []);
 
   const sections = [
     { label: 'Харилцаа ба жам ёсны хэл', url: 'https://mnsl.mn/мэдээлэл/харилцаа-ба-жам-ёсны-хэл/' },
@@ -59,13 +65,15 @@ export default function Info() {
             mnsl.mn
           </a>
           -ийн эх сурвалж бөгөөд MSLingo нь хуулбарлан харуулж байна.
-          {meta.statistics.signs > 0 && (
+          {meta && meta.statistics.signs > 0 && (
             <> Одоогоор {meta.statistics.signs.toLocaleString()} дохио, {meta.statistics.topics} сэдэвтэй.</>
           )}
         </p>
-        <p className="mt-1 text-xs text-ink-400 dark:text-ink-300 tabular-nums">
-          Импортлогдсон: {new Date(meta.importedAt).toLocaleDateString('mn-MN')}.
-        </p>
+        {meta && (
+          <p className="mt-1 text-xs text-ink-400 dark:text-ink-300 tabular-nums">
+            Импортлогдсон: {new Date(meta.importedAt).toLocaleDateString('mn-MN')}.
+          </p>
+        )}
       </section>
     </div>
   );

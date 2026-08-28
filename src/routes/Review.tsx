@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CheckCircle2, XCircle, Meh, Smile } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Meh, Smile, XCircle } from 'lucide-react';
 import { progress } from '../lib/progress/store';
 import { reviewCard, newSignMastery } from '../lib/srs';
-import { findSign } from '../content/loader';
+import { findSign, type Sign } from '../content/loader';
 import type { Rating } from 'ts-fsrs';
+import { LearnSkeleton } from '../components/Skeleton';
 
 const RATING_BUTTONS: { rating: Rating; label: string; icon: typeof Meh }[] = [
   { rating: 1, label: 'Хүнд', icon: XCircle },
@@ -15,18 +16,26 @@ export default function Review() {
   const [queue, setQueue] = useState<number[]>([]);
   const [current, setCurrent] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [sign, setSign] = useState<Sign | null>(null);
   const [phase, setPhase] = useState<'question' | 'answer'>('question');
   const [selectedRating, setSelectedRating] = useState<Rating | null>(null);
+
+  const loadSign = useCallback(async (id: number) => {
+    const found = await findSign(id);
+    setSign(found ?? null);
+  }, []);
 
   useEffect(() => {
     (async () => {
       const due = await progress.dueForReview();
-      setQueue(due.map((m) => m.signId));
+      const ids = due.map((m) => m.signId);
+      setQueue(ids);
       setLoading(false);
+      if (ids.length > 0) {
+        await loadSign(ids[0]);
+      }
     })();
-  }, []);
-
-  const sign = queue[current] ? findSign(queue[current]) : undefined;
+  }, [loadSign]);
 
   const handleRating = useCallback(async (rating: Rating) => {
     if (!sign) return;
@@ -44,23 +53,19 @@ export default function Review() {
     setPhase('answer');
   }, [sign]);
 
-  const handleNext = useCallback(() => {
-    if (current + 1 >= queue.length) {
+  const handleNext = useCallback(async () => {
+    const nextIdx = current + 1;
+    if (nextIdx >= queue.length) {
       setQueue([]);
       return;
     }
-    setCurrent((c) => c + 1);
+    setCurrent(nextIdx);
     setPhase('question');
     setSelectedRating(null);
-  }, [current, queue.length]);
+    await loadSign(queue[nextIdx]);
+  }, [current, queue, loadSign]);
 
-  if (loading) {
-    return (
-      <div className="text-center py-20">
-        <div className="animate-spin h-8 w-8 border-2 border-ink-200 border-t-ink-800 dark:border-ink-700 dark:border-t-brass-500 rounded-full mx-auto" />
-      </div>
-    );
-  }
+  if (loading) return <LearnSkeleton />;
 
   if (queue.length === 0 || !sign) {
     return (
@@ -118,6 +123,7 @@ export default function Review() {
             className="w-full py-3 rounded-md bg-ink-800 text-parchment-50 font-medium hover:bg-ink-700 dark:bg-brass-600 dark:text-ink-900 dark:hover:bg-brass-500 transition focus-ring"
           >
             {current + 1 >= queue.length ? 'Дахин үзэх дуусгах' : 'Дараах'}
+            <ChevronRight className="inline h-4 w-4 ml-1" />
           </button>
         </div>
       )}

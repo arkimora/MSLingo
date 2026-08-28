@@ -1,26 +1,21 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { ArrowRight, Flame, BookOpen, RotateCcw, GraduationCap } from 'lucide-react';
-import { loadContent } from '../content/loader';
+import { loadContent, type ContentBundle } from '../content/loader';
 import { progress } from '../lib/progress/store';
+import { HomeSkeleton } from '../components/Skeleton';
 
 export default function Home() {
-  const [stats, setStats] = useState({
-    total: 0,
-    dueCount: 0,
-    learned: 0,
-    xp: 0,
-    streak: 0,
-  });
-  const { meta } = loadContent();
+  const [content, setContent] = useState<ContentBundle | null>(null);
+  const [stats, setStats] = useState({ dueCount: 0, learned: 0, xp: 0, streak: 0 });
 
   useEffect(() => {
     (async () => {
+      const c = await loadContent();
       const profile = await progress.getProfile();
       const due = await progress.dueForReview();
-      const content = loadContent();
+      setContent(c);
       setStats({
-        total: content.signs.length,
         dueCount: due.length,
         learned: profile.totalSignsLearned,
         xp: profile.xp,
@@ -29,7 +24,7 @@ export default function Home() {
     })();
   }, []);
 
-  const isEmpty = meta.statistics.signs === 0;
+  if (!content) return <HomeSkeleton />;
 
   return (
     <div className="space-y-10">
@@ -41,11 +36,9 @@ export default function Home() {
         </h1>
         <p className="mt-4 text-lg text-ink-500 dark:text-ink-200 max-w-2xl text-balance">
           mnsl.mn-ийн толь бичгээс бүтэцтэйгээр суралц.{' '}
-          {stats.total > 0 && (
-            <span className="text-ink-700 dark:text-parchment-50 font-medium">
-              {stats.total.toLocaleString()} дохио, {meta.statistics.topics} сэдэв.
-            </span>
-          )}
+          <span className="text-ink-700 dark:text-parchment-50 font-medium">
+            {content.signs.length.toLocaleString()} дохио, {content.meta.statistics.topics} сэдэв.
+          </span>
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
           <Link
@@ -71,13 +64,11 @@ export default function Home() {
         </div>
       </section>
 
-      {isEmpty && <ContentEmptyNotice />}
-
       {/* Stats — editorial 3-column */}
       <section className="grid sm:grid-cols-3 gap-px bg-ink-100 dark:bg-ink-700 border rule rounded-xl overflow-hidden">
         <StatTile icon={Flame} label="Стреак" value={stats.streak} unit="өдөр" />
         <StatTile icon={GraduationCap} label="Суралцсан" value={stats.learned} unit="дохио" />
-        <StatTile icon={BookOpen} label="Нийт" value={stats.total} unit="дохио" />
+        <StatTile icon={BookOpen} label="Нийт" value={content.signs.length} unit="дохио" />
       </section>
 
       <section className="space-y-4">
@@ -124,20 +115,5 @@ function QuickLink({ to, title, desc, index }: { to: string; title: string; desc
       <p className="font-semibold text-ink-800 dark:text-parchment-50">{title}</p>
       <p className="text-sm text-ink-500 dark:text-ink-200 mt-1">{desc}</p>
     </Link>
-  );
-}
-
-function ContentEmptyNotice() {
-  return (
-    <div className="rounded-xl border border-dashed rule p-6 text-center">
-      <p className="font-medium text-ink-700 dark:text-parchment-50">Агуулга байхгүй байна</p>
-      <p className="text-sm text-ink-500 dark:text-ink-200 mt-2 max-w-md mx-auto">
-        mnsl.mn-ээс дохионы мэдээллийг татаж аваагүй байна. Хөгжүүлэгч{' '}
-        <code className="px-1.5 py-0.5 rounded border rule text-xs font-mono">npm run sync:mnsl</code>{' '}
-        командыг ажиллуулсны дараа{' '}
-        <code className="px-1.5 py-0.5 rounded border rule text-xs font-mono">npm run validate:msl</code>{' '}
-        ажиллуулж, дахин бүтээ.
-      </p>
-    </div>
   );
 }

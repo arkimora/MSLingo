@@ -3,20 +3,27 @@ import { Flame, Star, TrendingUp, BookOpen, Trophy } from 'lucide-react';
 import { progress, xpToLevel, type UserProfile } from '../lib/progress/store';
 import { loadContent } from '../content/loader';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { Skeleton, SkeletonLine } from '../components/Skeleton';
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [meta, setMeta] = useState<{ statistics: { signs: number; topics: number; examples: number }; importedAt: string } | null>(null);
   const [achievements, setAchievements] = useState<{ id: string; unlockedAt: string }[]>([]);
-  const { meta } = loadContent();
 
   useEffect(() => {
-    void progress.getProfile().then(setProfile);
-    void progress.listAchievements().then(setAchievements);
+    (async () => {
+      const [p, c] = await Promise.all([
+        progress.getProfile(),
+        loadContent(),
+      ]);
+      setProfile(p);
+      setMeta(c.meta);
+      const a = await progress.listAchievements();
+      setAchievements(a);
+    })();
   }, []);
 
-  if (!profile) {
-    return <LoadingSpinner />;
-  }
+  if (!profile || !meta) return <LoadingSpinner />;
 
   const { level, intoLevel, nextLevelAt } = xpToLevel(profile.xp);
   const percent = Math.round((intoLevel / nextLevelAt) * 100);
@@ -120,16 +127,12 @@ export default function Profile() {
       {/* Source info */}
       <section className="border-t rule pt-6 text-xs text-ink-400 dark:text-ink-300">
         <p className="uppercase tracking-wider mb-2">Агуулгын мэдээ</p>
-        {meta.statistics.signs === 0 ? (
-          <p>Агуулга ачаалагдаагүй. npm run sync:mnsl ажиллуулна уу.</p>
-        ) : (
-          <ul className="grid grid-cols-2 sm:grid-cols-4 gap-3 tabular-nums">
-            <li><span className="text-ink-300 dark:text-ink-300">Дохио</span> <span className="text-ink-700 dark:text-parchment-50">{meta.statistics.signs.toLocaleString()}</span></li>
-            <li><span className="text-ink-300 dark:text-ink-300">Сэдэв</span> <span className="text-ink-700 dark:text-parchment-50">{meta.statistics.topics}</span></li>
-            <li><span className="text-ink-300 dark:text-ink-300">Жишээ</span> <span className="text-ink-700 dark:text-parchment-50">{meta.statistics.examples}</span></li>
-            <li><span className="text-ink-300 dark:text-ink-300">Импорт</span> <span className="text-ink-700 dark:text-parchment-50">{new Date(meta.importedAt).toLocaleDateString('mn-MN')}</span></li>
-          </ul>
-        )}
+        <ul className="grid grid-cols-2 sm:grid-cols-4 gap-3 tabular-nums">
+          <li><span className="text-ink-300 dark:text-ink-300">Дохио</span> <span className="text-ink-700 dark:text-parchment-50">{meta.statistics.signs.toLocaleString()}</span></li>
+          <li><span className="text-ink-300 dark:text-ink-300">Сэдэв</span> <span className="text-ink-700 dark:text-parchment-50">{meta.statistics.topics}</span></li>
+          <li><span className="text-ink-300 dark:text-ink-300">Жишээ</span> <span className="text-ink-700 dark:text-parchment-50">{meta.statistics.examples}</span></li>
+          <li><span className="text-ink-300 dark:text-ink-300">Импорт</span> <span className="text-ink-700 dark:text-parchment-50">{new Date(meta.importedAt).toLocaleDateString('mn-MN')}</span></li>
+        </ul>
       </section>
     </div>
   );

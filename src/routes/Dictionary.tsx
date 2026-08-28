@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, BookOpen } from 'lucide-react';
-import { loadContent } from '../content/loader';
+import { loadContent, type ContentBundle } from '../content/loader';
 import { search, buildSearchIndex } from '../lib/search';
 import type { Sign } from '../content/schema';
+import { DictionarySkeleton } from '../components/Skeleton';
 
 const MONGOLIAN_ALPHABET = [
   'А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М',
@@ -12,32 +13,38 @@ const MONGOLIAN_ALPHABET = [
 ];
 
 export default function Dictionary() {
+  const [content, setContent] = useState<ContentBundle | null>(null);
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'topic'>('all');
   const [selectedTopic, setSelectedTopic] = useState('');
   const [searchParams] = useSearchParams();
-  const { signs, topics } = loadContent();
 
   useEffect(() => {
-    buildSearchIndex();
-    const t = searchParams.get('topic');
-    if (t) {
-      setActiveTab('topic');
-      setSelectedTopic(t);
-    }
+    (async () => {
+      const c = await loadContent();
+      buildSearchIndex();
+      setContent(c);
+      const t = searchParams.get('topic');
+      if (t) {
+        setActiveTab('topic');
+        setSelectedTopic(t);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const filtered = useMemo<Sign[]>(() => {
+    if (!content) return [];
     if (activeTab === 'topic' && selectedTopic) {
-      return signs.filter((s) => s.topics.includes(selectedTopic));
+      return content.signs.filter((s) => s.topics.includes(selectedTopic));
     }
     if (query.trim()) {
       const hits = search(query);
       const ids = new Set(hits.map((h) => h.id));
-      return signs.filter((s) => ids.has(s.id));
+      return content.signs.filter((s) => ids.has(s.id));
     }
-    return signs;
-  }, [activeTab, selectedTopic, query, signs]);
+    return content.signs;
+  }, [activeTab, selectedTopic, query, content]);
 
   const grouped = useMemo(() => {
     const g: Record<string, Sign[]> = {};
@@ -58,6 +65,8 @@ export default function Dictionary() {
     return ai - bi;
   });
 
+  if (!content) return <DictionarySkeleton />;
+
   return (
     <div className="space-y-6">
       <header className="border-b rule pb-6">
@@ -67,9 +76,7 @@ export default function Dictionary() {
           Толь бичиг
         </h1>
         <p className="text-sm text-ink-500 dark:text-ink-200 mt-2">
-          {signs.length > 0
-            ? `${signs.length.toLocaleString()} дохио. Эх сурвалж: mnsl.mn.`
-            : 'Агуулга ачаалж байна...'}
+          {content.signs.length.toLocaleString()} дохио. Эх сурвалж: mnsl.mn.
         </p>
       </header>
 
@@ -105,7 +112,7 @@ export default function Dictionary() {
 
       {activeTab === 'topic' && (
         <div className="flex flex-wrap gap-1.5">
-          {topics.map((t) => (
+          {content.topics.map((t) => (
             <button
               key={t.id}
               onClick={() => setSelectedTopic(t.id === selectedTopic ? '' : t.id)}

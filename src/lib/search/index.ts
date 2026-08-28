@@ -20,17 +20,16 @@ const index = new FlexSearch.Document<IndexedSign, true>({
   document: {
     id: 'id',
     index: ['headword', 'meanings', 'topics'],
-    store: true, // store full doc for retrieval in search()
+    store: true,
   },
   tokenize: 'forward',
-  // Cyrillic is supported; tokenize: 'forward' gives prefix matching
 });
 
 let built = false;
 
-export function buildSearchIndex() {
+export async function buildSearchIndex() {
   if (built) return;
-  const { signs } = loadContent();
+  const { signs } = await loadContent();
   for (const s of signs) {
     index.add({
       id: s.id,
@@ -50,7 +49,7 @@ export interface SearchHit {
 }
 
 export function search(query: string, limit = 50): SearchHit[] {
-  if (!built) buildSearchIndex();
+  if (!built) return [];
   if (!query.trim()) return [];
   const results = index.search(query, { limit, enrich: true }) as unknown as EnrichedDocumentSearchResultSetUnit<IndexedSign>[];
   const seen = new Set<number>();
