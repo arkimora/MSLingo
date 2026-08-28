@@ -17,10 +17,16 @@ jobs:
           java-version: '17'
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      - name: Build debug APK
+      - name: Prepare Gradle wrapper
         working-directory: twa
         run: |
           chmod +x gradlew
+          # Download gradle-wrapper.jar since it's gitignored to keep the repo small
+          WRAPPER_VERSION=$(grep 'distributionUrl' gradle/wrapper/gradle-wrapper.properties | sed 's/.*gradle-\([0-9.]*\)-.*/\1/')
+          curl -sL "https://raw.githubusercontent.com/gradle/gradle/v${WRAPPER_VERSION}/gradle/wrapper/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar
+      - name: Build debug APK
+        working-directory: twa
+        run: |
           ./gradlew assembleDebug --no-daemon
         env:
           ANDROID_HOME: ${{ runner.temp }}/android-sdk
