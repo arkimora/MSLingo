@@ -3,62 +3,61 @@ import { ContentBundleSchema } from './schema';
 
 export type { ContentBundle, Sign, Topic, GrammarTopic, FingerspellingEntry, NumberEntry, ContentMeta };
 
-import signsJson from '@content/msl/signs.json';
-import topicsJson from '@content/msl/topics.json';
-import grammarJson from '@content/msl/grammar.json';
-import fingerspellingJson from '@content/msl/fingerspelling.json';
-import numbersJson from '@content/msl/numbers.json';
-import metaJson from '@content/msl/meta.json';
-
 let cached: ContentBundle | null = null;
 let inflight: Promise<ContentBundle> | null = null;
 
+const BASE = '/content/msl';
+
 /**
- * Load the content bundle. The data is bundled at build time, but Zod
- * validation is expensive on the main thread for ~1,400 signs — so we
- * yield to the event loop and resolve asynchronously. Result is memoized
- * so subsequent calls return instantly.
+ * Load the content bundle by fetching the static JSON files.
+ * This is dramatically faster than bundling them in JS because:
+ *   1. The browser streams and parses them separately from the main JS
+ *   2. They're cacheable as plain HTTP resources (no parse cost on repeat visits)
+ *   3. The service worker caches them on first load
  */
 export function loadContent(): Promise<ContentBundle> {
   if (cached) return Promise.resolve(cached);
   if (inflight) return inflight;
 
-  inflight = new Promise((resolve) => {
-    // Yield to the event loop so the UI can paint a skeleton first.
-    setTimeout(() => {
-      const bundle = ContentBundleSchema.parse({
-        meta: metaJson as ContentMeta,
-        signs: (signsJson as { signs: Sign[] }).signs,
-        topics: (topicsJson as { topics: Topic[] }).topics,
-        grammar: (grammarJson as { grammar: GrammarTopic[] }).grammar,
-        fingerspelling: (fingerspellingJson as { fingerspelling: FingerspellingEntry[] })
-          .fingerspelling,
-        numbers: (numbersJson as { numbers: NumberEntry[] }).numbers,
-      });
-      cached = bundle;
-      inflight = null;
-      resolve(bundle);
-    }, 0);
+  inflight = fetchBundle().then((bundle) => {
+    cached = bundle;
+    inflight = null;
+    return bundle;
   });
 
   return inflight;
 }
 
+async function fetchBundle(): Promise<ContentBundle> {
+  // Fetch all in parallel
+  const [meta, signs, topics, grammar, fingerspelling, numbers] = await Promise.all([
+    fetchJSON<ContentMeta>(`${BASE}/meta.json`),
+    fetchJSON<{ signs: Sign[] }>(`${BASE}/signs.json`),
+    fetchJSON<{ topics: Topic[] }>(`${BASE}/topics.json`),
+    fetchJSON<{ grammar: GrammarTopic[] }>(`${BASE}/grammar.json`),
+    fetchJSON<{ fingerspelling: FingerspellingEntry[] }>(`${BASE}/fingerspelling.json`),
+    fetchJSON<{ numbers: NumberEntry[] }>(`${BASE}/numbers.json`),
+  ]);
+  return ContentBundleSchema.parse({ meta, signs, topics, grammar, fingerspelling, numbers });
+}
+
+async function fetchJSON<T>(url: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
 /** Synchronous read — only valid after `loadContent()` has resolved once. */
 export function getContent(): ContentBundle {
   if (!cached) {
-    // Caller forgot to await loadContent(). Fall back to sync parse so
-    // the app doesn't crash; the first await will still trigger loading UI.
-    const bundle = ContentBundleSchema.parse({
-      meta: metaJson as ContentMeta,
-      signs: (signsJson as { signs: Sign[] }).signs,
-      topics: (topicsJson as { topics: Topic[] }).topics,
-      grammar: (grammarJson as { grammar: GrammarTopic[] }).grammar,
-      fingerspelling: (fingerspellingJson as { fingerspelling: FingerspellingEntry[] })
-        .fingerspelling,
-      numbers: (numbersJson as { numbers: NumberEntry[] }).numbers,
+    return ContentBundleSchema.parse({
+      meta: { source: 'mnsl.mn', importedAt: new Date().toISOString(), schemaVersion: 1, statistics: { signs: 0, variants: 0, categories: 0, examples: 0, grammarTopics: 0, fingerspellingEntries: 0, numberEntries: 0 } },
+      signs: [],
+      topics: [],
+      grammar: [],
+      fingerspelling: [],
+      numbers: [],
     });
-    cached = bundle;
   }
   return cached;
 }
@@ -73,12 +72,6 @@ export async function findTopic(slug: string): Promise<Topic | undefined> {
   return topics.find((t) => t.id === slug);
 }
 
-/**
- * Find the previous and next signs in dictionary order. The source
- * (mnsl.mn) is alphabetical, so we order by headword using Mongolian
- * Cyrillic collation (JS String#localeCompare with 'ru' is close enough
- * for the Cyrillic letters we use).
- */
 export async function signNeighbors(
   id: number,
 ): Promise<{ prev?: Sign; next?: Sign }> {
