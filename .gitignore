@@ -10,6 +10,9 @@ dist-ssr/
 .env.local
 .env.*.local
 *.log
+# Sync script intermediate files
+numbers_raw.json
+*_raw.json
 coverage/
 playwright-report/
 test-results/
@@ -31,3 +34,9 @@ twa/app/keystore/
 gh.exe
 gh.zip
 build-apk.sh
+
+# Vercel CLI local config
+.vercel
+
+# APKs — distributed manually or via GitHub Releases
+*.apk
