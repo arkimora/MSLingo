@@ -11,9 +11,51 @@
     />
     <title>MSLingo — Монгол дохионы хэл</title>
     <link rel="preconnect" href="https://mnsl.mn" crossorigin />
+    <style>
+      /* Inline pre-hydration paint. Shown until React mounts and replaces #root.
+         Prevents the perceived "blank page" while the JS bundle parses. */
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fdfcf8;
+        color: #18171a;
+      }
+      @media (prefers-color-scheme: dark) {
+        .boot { background: #18171a; color: #fdfcf8; }
+      }
+      .boot__spinner {
+        width: 32px;
+        height: 32px;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        opacity: 0.6;
+        animation: boot-spin 0.9s linear infinite;
+      }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body class="bg-parchment-50 text-ink-800 dark:bg-ink-900 dark:text-parchment-50">
     <div id="root"></div>
+    <div class="boot" id="boot" aria-hidden="true">
+      <div class="boot__spinner"></div>
+    </div>
+    <script>
+      // Hide the boot spinner as soon as React mounts the real app. This runs
+      // synchronously after the bundle loads, so the user never sees the spinner
+      // flicker for long on a healthy load, but it IS visible during the gap.
+      window.addEventListener('DOMContentLoaded', function () {
+        var boot = document.getElementById('boot');
+        if (!boot) return;
+        // Hide on the next frame so React has a chance to take over #root first.
+        requestAnimationFrame(function () {
+          boot.style.display = 'none';
+        });
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

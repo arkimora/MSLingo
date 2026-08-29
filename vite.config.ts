@@ -64,11 +64,17 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Exclude content JSON from precache — they'll be fetched at runtime and
-        // cached via runtimeCaching rules below. signs.json is ~1.3 MB minified.
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webp}'],
-        maximumFileSizeToCacheInBytes: 1024 * 1024 * 5, // 5 MB
+        // Exclude content JSON and index.html from precache.
+        // - Content JSON: fetched at runtime via runtimeCaching rules below.
+        // - index.html: MUST NOT be precached. If it is, old SW instances serve
+        //   stale HTML referencing old chunk hashes → 404 on chunks → blank page.
+        //   Serving it fresh ensures the browser always gets the current build's
+        //   chunk hashes, eliminating the "loading loop" after redeployments.
+        globPatterns: ['**/*.{js,css,svg,png,ico,webp}'],
+        cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',
+        // Deny-list: skip precache for HTML files so index.html is always fresh.
+        navigateFallbackDenylist: [],
         runtimeCaching: [
           {
             // Content package — cache on first load, serve from cache thereafter.
