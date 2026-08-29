@@ -79,10 +79,14 @@ export default defineConfig({
           {
             // Content package — cache on first load, serve from cache thereafter.
             // signs.json is ~2 MB but we only want it fetched once.
+            // Note: bumping cacheName (msl-content-v2) invalidates the previous
+            // msl-content cache, which is required when content shape changes
+            // (e.g. when fingerspelling.json was empty in an earlier build and
+            // got cached — bumping forces a refetch).
             urlPattern: /\/content\/msl\/.*\.json$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'msl-content',
+              cacheName: 'msl-content-v2',
               expiration: {
                 maxEntries: 20,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year — content doesn't change
