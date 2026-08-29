@@ -85,10 +85,3 @@ npx tsc --noEmit           # Typecheck
 ```
 
 CI: `.github/workflows/ci.yml` runs typecheck + unit + e2e + build on every push.
-
-## TWA / APK
-
-- `twa/` directory — Bubblewrap TWA project
-- `.github/workflows/apk.yml` — builds debug APK in CI on every push to main
-- `twa/SIGNING.md` — full guide for keystore generation, signed builds, CI signing, and Play Store
-- PWA manifest colors (vite.config.ts) must match `<meta name="theme-color">` in `index.html`

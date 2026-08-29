@@ -20,15 +20,6 @@ test-results/
 .cache/
 # TypeScript incremental build cache
 *.tsbuildinfo
-# TWA Android build output
-twa/.gradle/
-twa/gradle/wrapper/gradle-wrapper.jar
-twa/app/build/
-twa/build/
-twa/local.properties
-*.keystore
-keystore.properties
-twa/app/keystore/
 # Local-only helper scripts (downloaded tools, release publisher)
 *.bat
 gh.exe
