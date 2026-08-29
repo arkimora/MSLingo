@@ -102,13 +102,18 @@ export function Layout({ children }: { children: ReactNode }) {
         </ul>
       </nav>
 
-      <footer className="border-t rule py-5 text-center text-xs text-ink-400 dark:text-ink-300">
+      <footer className="border-t rule py-5 text-center text-xs text-ink-400 dark:text-ink-300 space-y-1">
         <p>
           Монгол дохионы хэлийг сурах. Эх сурвалж:{' '}
           <a className="underline underline-offset-2 hover:text-brass-700 dark:hover:text-brass-400" href="https://mnsl.mn" rel="noreferrer noopener" target="_blank">
             mnsl.mn
           </a>
           .
+        </p>
+        <p>
+          <a className="underline underline-offset-2 hover:text-brass-700 dark:hover:text-brass-400" href="https://arkimora.vercel.app" rel="noreferrer noopener" target="_blank">
+            arkimora.vercel.app
+          </a>
         </p>
       </footer>
     </div>
