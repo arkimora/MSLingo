@@ -187,7 +187,7 @@ export default function Learn() {
           <p className="font-semibold tracking-tight text-center mt-1">Энэ дохио ямар утгатай вэ?</p>
         </div>
         <video
-          key={sign.id}
+          key={sign.primaryMedia.url}
           src={sign.primaryMedia.url}
           poster={sign.primaryMedia.posterUrl}
           autoPlay

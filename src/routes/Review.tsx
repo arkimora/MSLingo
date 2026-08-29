@@ -95,7 +95,7 @@ export default function Review() {
 
       <div className="rounded-md border rule overflow-hidden bg-parchment-50/30 dark:bg-ink-800/30">
         <video
-          key={sign.id}
+          key={sign.primaryMedia.url}
           src={sign.primaryMedia.url}
           poster={sign.primaryMedia.posterUrl}
           autoPlay
