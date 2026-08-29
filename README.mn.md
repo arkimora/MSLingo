@@ -83,16 +83,13 @@ npx tsc --noEmit           # Typecheck
 
 CI нь бүх push дээр гуруулаа ажиллуулдаг — `.github/workflows/ci.yml` харна уу.
 
-## Android APK (TWA)
+## Deployment
 
-PWA-г Trusted Web Activity-ээр Android апп болгон гаргана. `twa/SIGNING.md` файлд бүрэн заавар (keytool генератор, локал гарын үсэг, CI гарын үсэг, Play Store) байна.
+Апп бол PWA — Vite 6 + `vite-plugin-pwa` (Workbox). Vercel руу deploy хийгдэнэ; `vercel.json` нь агуулгын JSON дээр `Cache-Control: immutable` header, мөн `index.html` руу SPA rewrite нэмдэг. Service worker нь `content/msl/*.json` болон mnsl.mn медиаг кэшлэдэг — анхны удаан load хийсний дараа fully offline ажиллана.
 
-```bash
-# Локал debug хувилбар (JDK 17 + Android SDK шаардлагатай)
-cd twa && ./gradlew assembleDebug
-```
+Утсаар суулгахын тулд Chrome/Edge/Safari дээр deployed URL-г нээгээд **Add to Home Screen** дарна — editorial palette-ийн theme color-тэй standalone апп болж нээгдэнэ.
 
-## Хувийн寿命
+## Хувийн аюулгүй байдал
 
 Бид юу ч цуглуулдаггүй. Analytics байхгүй. Service worker нь зөвхөн mnsl.mn-ийн өгөгдлүүдийг (URL шаталбараар) кэшлэдэг.
 

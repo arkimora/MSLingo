@@ -64,8 +64,7 @@ tests/
   lib/            Unit tests (Vitest) — srs, progress, schema
   e2e/            Playwright E2E — home, dictionary, settings, profile
 
-twa/              Bubblewrap TWA project (APK build)
-.github/workflows/  CI (ci.yml) + APK build (apk.yml)
+.github/workflows/  CI (ci.yml) — typecheck, unit, e2e, build
 ```
 
 ## Design tokens
@@ -102,17 +101,11 @@ npx tsc --noEmit           # Typecheck
 
 CI runs all three on every push — see `.github/workflows/ci.yml`.
 
-## Android APK (TWA)
+## Deployment
 
-The PWA is published as an Android app via Trusted Web Activity. See `twa/SIGNING.md` for full instructions (keystore generation, local signing, CI signing, Play Store).
+The app is a PWA — Vite 6 + `vite-plugin-pwa` (Workbox). It is deployed to Vercel via the standard `vercel deploy` flow; `vercel.json` adds a long `Cache-Control: immutable` header for the bundled content JSON and a SPA rewrite to `index.html`. The service worker caches the bundled `content/msl/*.json` and on-demand mnsl.mn media, so the app is fully usable offline after the first visit.
 
-```bash
-# Local debug build (requires JDK 17 + Android SDK)
-cd twa && ./gradlew assembleDebug
-
-# Or push to main and download from GitHub Actions:
-# .github/workflows/apk.yml uploads app-debug.apk as an artifact (14-day retention)
-```
+To install on a phone, open the deployed URL in Chrome/Edge/Safari and use **Add to Home Screen** — it launches as a standalone app with the editorial palette as theme color.
 
 ## Why no accounts / cloud
 
