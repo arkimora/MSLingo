@@ -1,18 +1,29 @@
 import { useEffect, useState } from 'react';
 import { loadNumbers } from '../content/loader';
-import { Hash } from 'lucide-react';
+import { Hash, X } from 'lucide-react';
 import { GridSkeleton } from '../components/Skeleton';
 import type { NumberEntry } from '../content/schema';
 
 export default function Numbers() {
   const [entries, setEntries] = useState<NumberEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<NumberEntry | null>(null);
 
   useEffect(() => {
     loadNumbers()
       .then(setEntries)
       .catch((e) => setError(e instanceof Error ? e.message : 'Ачааллаж чадсангүй'));
   }, []);
+
+  // Close modal on Escape
+  useEffect(() => {
+    if (!selected) return;
+    const handler = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') setSelected(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selected]);
 
   if (error) {
     return (
@@ -42,52 +53,105 @@ export default function Numbers() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <header className="border-b rule pb-6">
-        <p className="text-xs uppercase tracking-[0.25em] text-brass-700 dark:text-brass-400 mb-2">Тоо</p>
-        <h1 className="text-3xl font-semibold tracking-tight text-ink-800 dark:text-parchment-50 flex items-center gap-3">
-          <Hash className="h-7 w-7 text-ink-700 dark:text-parchment-100" />
-          Тоо
-        </h1>
-        <p className="text-sm text-ink-500 dark:text-ink-200 mt-2">
-          MSL тоон дохио. Эх сурвалж: mnsl.mn.
-        </p>
-      </header>
+    <>
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <header className="border-b rule pb-6">
+          <p className="text-xs uppercase tracking-[0.25em] text-brass-700 dark:text-brass-400 mb-2">Тоо</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-ink-800 dark:text-parchment-50 flex items-center gap-3">
+            <Hash className="h-7 w-7 text-ink-700 dark:text-parchment-100" />
+            Тоо
+          </h1>
+          <p className="text-sm text-ink-500 dark:text-ink-200 mt-2">
+            MSL тоон дохио. Дарж үзэх. Эх сурвалж: mnsl.mn.
+          </p>
+        </header>
 
-      {entries.length === 0 ? (
-        <p className="text-center text-ink-400 dark:text-ink-300 py-16">
-          Тоон дохионы мэдээлэл хараахан бэлэн болоогүй байна.
-        </p>
-      ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-px bg-ink-100 dark:bg-ink-700 border rule rounded-md overflow-hidden">
-          {entries.map((entry) => (
-            <div
-              key={String(entry.value)}
-              className="bg-parchment-50 dark:bg-ink-800 text-center"
-            >
-              {entry.media.url && (
-                <video
-                  key={`v-${entry.media.id}`}
-                  src={entry.media.url}
-                  poster={entry.media.posterUrl}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  controls
-                  preload="metadata"
-                  className="w-full aspect-square object-contain bg-black"
-                  aria-label={`Тоо ${entry.value}`}
-                />
-              )}
-              <p className="py-2 font-serif text-lg font-semibold text-ink-800 dark:text-parchment-50">{entry.value}</p>
-              {entry.context && (
-                <p className="pb-2 text-xs text-ink-400 dark:text-ink-300 uppercase tracking-wider">{entry.context}</p>
-              )}
-            </div>
-          ))}
-        </div>
+        {entries.length === 0 ? (
+          <p className="text-center text-ink-400 dark:text-ink-300 py-16">
+            Тоон дохионы мэдээлэл хараахан бэлэн болоогүй байна.
+          </p>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-px bg-ink-100 dark:bg-ink-700 border rule rounded-md overflow-hidden">
+            {entries.map((entry) => (
+              <button
+                key={String(entry.value) + (entry.context ?? '')}
+                onClick={() => setSelected(entry)}
+                className="bg-parchment-50 dark:bg-ink-800 text-center hover:brightness-90 dark:hover:brightness-110 transition focus:outline-none focus:ring-2 focus:ring-brass-600 focus:z-10"
+                aria-label={`Тоо ${entry.value}`}
+              >
+                {entry.media.posterUrl ? (
+                  <img
+                    src={entry.media.posterUrl}
+                    alt={`Тоо ${entry.value}`}
+                    className="w-full aspect-square object-contain bg-black"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full aspect-square bg-ink-200 dark:bg-ink-600" />
+                )}
+                <p className="py-2 font-serif text-lg font-semibold text-ink-800 dark:text-parchment-50">{entry.value}</p>
+                {entry.context && (
+                  <p className="pb-2 text-xs text-ink-400 dark:text-ink-300 uppercase tracking-wider">{entry.context}</p>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Video modal */}
+      {selected && (
+        <NumberVideoModal
+          entry={selected}
+          onClose={() => setSelected(null)}
+        />
       )}
+    </>
+  );
+}
+
+function NumberVideoModal({ entry, onClose }: { entry: NumberEntry; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Тоо ${entry.value}`}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-ink-900/80 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div className="relative z-10 w-full max-w-sm rounded-md overflow-hidden bg-black border border-ink-700 shadow-2xl">
+        <video
+          key={entry.media.id}
+          src={entry.media.url}
+          poster={entry.media.posterUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          controls
+          preload="auto"
+          className="w-full aspect-video"
+        />
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-ink-900/70 text-parchment-50 hover:bg-ink-900 transition"
+          aria-label="Хаах"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <p className="py-3 text-center font-serif text-2xl font-semibold text-parchment-50 bg-ink-800">
+          {entry.value}
+          {entry.context && (
+            <span className="block text-xs font-sans font-normal text-ink-200 uppercase tracking-wider mt-1">{entry.context}</span>
+          )}
+        </p>
+      </div>
     </div>
   );
 }
